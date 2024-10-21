@@ -1,8 +1,8 @@
 <?php
 /*
-Plugin Name: WooCommerce Order WhatsApp Notification with Editable Settings
-Description: Sends a WhatsApp notification using CallMeBot API when a new WooCommerce order is placed, with editable settings for API key, phone number, and message. Default WordPress behavior for password reset.
-Version: 1.2
+Plugin Name: WooCommerce Order WhatsApp Notification with Editable Settings and Admin Password Reset
+Description: Sends a WhatsApp notification using CallMeBot API when a new WooCommerce order is placed, and sends password reset link via WhatsApp for admin users.
+Version: 1.3
 Author: Your Name
 */
 
@@ -127,4 +127,29 @@ function woo_whatsapp_api_key_callback() {
 function woo_whatsapp_order_message_callback() {
     $message = get_option('woo_whatsapp_order_message', 'تم استلام طلب جديد من متجر {store_name}. رقم الطلب: {order_number}. تاريخ الطلب: {order_date}. المبلغ الإجمالي: {order_total} شيكل.');
     echo '<textarea name="woo_whatsapp_order_message" rows="5" cols="50">' . esc_textarea($message) . '</textarea>';
+}
+
+// Hook into the password reset request
+add_action('retrieve_password_message', 'send_whatsapp_forgot_password_link', 10, 4);
+
+function send_whatsapp_forgot_password_link($message, $key, $user_login, $user_data) {
+    // Check if the user is an admin
+    if (in_array('administrator', $user_data->roles)) {
+        // Generate the password reset link
+        $reset_link = network_site_url("wp-login.php?action=rp&key=$key&login=" . rawurlencode($user_login), 'login');
+
+        // Prepare WhatsApp message
+        $phone_number = get_option('woo_whatsapp_phone_number', ''); // Admin's phone number from settings
+        $apikey = get_option('woo_whatsapp_api_key', ''); // Your CallMeBot API key
+        $whatsapp_message = 'طلب إعادة تعيين كلمة المرور للمسؤول. رابط إعادة التعيين: ' . $reset_link;
+
+        // Create the URL for the CallMeBot API request
+        $api_url = 'https://api.callmebot.com/whatsapp.php?phone=' . $phone_number . '&text=' . urlencode($whatsapp_message) . '&apikey=' . $apikey;
+
+        // Send the API request
+        wp_remote_get($api_url);
+    }
+
+    // Return the original email message (unchanged)
+    return $message;
 }
