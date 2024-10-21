@@ -13,7 +13,10 @@ function send_whatsapp_notification_on_new_order($order_id) {
     // Get the admin settings
     $phone_number = get_option('woo_whatsapp_phone_number', '');
     $apikey = get_option('woo_whatsapp_api_key', '');
-    $message_template = get_option('woo_whatsapp_order_message', 'You have a new order. Order Number: {order_number}, Order Time: {order_date}, Total: {order_total} ILS.');
+    $message_template = get_option('woo_whatsapp_order_message', 'تم استلام طلب جديد من متجر {store_name}. رقم الطلب: {order_number}. تاريخ الطلب: {order_date}. المبلغ الإجمالي: {order_total} شيكل.');
+
+    // Get the store name
+    $store_name = get_bloginfo('name');
 
     // Get the order details
     $order = wc_get_order($order_id);
@@ -23,8 +26,8 @@ function send_whatsapp_notification_on_new_order($order_id) {
 
     // Replace placeholders with actual order data
     $message = str_replace(
-        ['{order_number}', '{order_date}', '{order_total}'],
-        [$order_number, $order_date, $order_total],
+        ['{order_number}', '{order_date}', '{order_total}', '{store_name}'],
+        [$order_number, $order_date, $order_total, $store_name],
         $message_template
     );
 
@@ -54,7 +57,7 @@ function woo_whatsapp_settings_menu() {
 function woo_whatsapp_settings_page() {
     ?>
     <div class="wrap">
-        <h1>WhatsApp Notification Settings</h1>
+        <h1>إعدادات إشعارات واتساب</h1>
         <form method="post" action="options.php">
             <?php
             settings_fields('woo_whatsapp_settings_group');
@@ -62,11 +65,12 @@ function woo_whatsapp_settings_page() {
             submit_button();
             ?>
         </form>
-        <h3>Placeholders for Message:</h3>
+        <h3>الرموز المتاحة في الرسالة:</h3>
         <p>
-            <strong>{order_number}</strong> - Inserts the order number.<br>
-            <strong>{order_date}</strong> - Inserts the order date and time.<br>
-            <strong>{order_total}</strong> - Inserts the total price in ILS.<br>
+            <strong>{order_number}</strong> - رقم الطلب.<br>
+            <strong>{order_date}</strong> - تاريخ ووقت الطلب.<br>
+            <strong>{order_total}</strong> - المبلغ الإجمالي بالشيكل.<br>
+            <strong>{store_name}</strong> - اسم المتجر.<br>
         </p>
     </div>
     <?php
@@ -86,7 +90,7 @@ function woo_whatsapp_register_settings() {
 
     add_settings_field(
         'woo_whatsapp_phone_number',
-        'WhatsApp Phone Number',
+        'رقم واتساب',
         'woo_whatsapp_phone_number_callback',
         'woo-whatsapp-settings',
         'woo_whatsapp_main_settings'
@@ -94,7 +98,7 @@ function woo_whatsapp_register_settings() {
 
     add_settings_field(
         'woo_whatsapp_api_key',
-        'CallMeBot API Key',
+        'API Key',
         'woo_whatsapp_api_key_callback',
         'woo-whatsapp-settings',
         'woo_whatsapp_main_settings'
@@ -102,7 +106,7 @@ function woo_whatsapp_register_settings() {
 
     add_settings_field(
         'woo_whatsapp_order_message',
-        'Order Notification Message',
+        'رسالة إشعار الطلب',
         'woo_whatsapp_order_message_callback',
         'woo-whatsapp-settings',
         'woo_whatsapp_main_settings'
@@ -121,6 +125,6 @@ function woo_whatsapp_api_key_callback() {
 }
 
 function woo_whatsapp_order_message_callback() {
-    $message = get_option('woo_whatsapp_order_message', 'You have a new order. Order Number: {order_number}, Order Time: {order_date}, Total: {order_total} ILS.');
+    $message = get_option('woo_whatsapp_order_message', 'تم استلام طلب جديد من متجر {store_name}. رقم الطلب: {order_number}. تاريخ الطلب: {order_date}. المبلغ الإجمالي: {order_total} شيكل.');
     echo '<textarea name="woo_whatsapp_order_message" rows="5" cols="50">' . esc_textarea($message) . '</textarea>';
 }
