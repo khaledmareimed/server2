@@ -1,0 +1,23 @@
+name = "serverlesswp-wordpress-starter"
+type = "javascript"
+
+account_id = "c4cf66dec31ba9458164ffd8ab1dae99"
+workers_dev = true
+compatibility_date = "2023-10-22"
+
+[[build.upload]]
+  format = "service-worker"
+  dir = "dist"
+
+# Custom environment variables for the build process
+[vars]
+  NODEJS_AWS_HANDLER_NAME = "handler"
+  DATABASE = "${DATABASE}"  # Reference the environment variable for the database name
+  USERNAME = "${USERNAME}"    # Reference the environment variable for the username
+  PASSWORD = "${PASSWORD}"    # Reference the environment variable for the password
+  HOST = "${HOST}"            # Reference the environment variable for the host
+
+# Routes: define where the worker should listen
+[[routes]]
+  pattern = "https://server2-ays.pages.dev/*"
+  script = "serverlesswp-wordpress-starter"
